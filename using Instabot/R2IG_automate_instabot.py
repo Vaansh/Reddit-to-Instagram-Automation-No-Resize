@@ -8,48 +8,45 @@ import time
 bot=Bot()
 bot.login(username=credentials.IGusername, password=credentials.IGpassword)
 
-filePath = '/Users/herculepoirot/Desktop/Automation/pics_ksi/'
+filePath=''   #Folder to save images in; Example: /Users/username/Desktop/folder/destination/
+currentPost=1
+numPosts=100  #Num of rounds can be decided here
+urlPosted=[]  #To avoid duplicates
+postGap=7200    #Gap between the posts (in seconds)
+subreddit=credentials.reddit.subreddit('')    #Name of subreddit to source posts from
 
-def saveImage(url, filePath, fileName):
-    fullPath = filePath + fileName + '.PNG'
-    urllib.request.urlretrieve(url, fullPath)
-prevPath = '/Users/vaanshlakhwara/wholesome_insta/StandardKSIIGAuto/pics/iikkfm.PNG'
-preprePath = '/Users/vaanshlakhwara/wholesome_insta/StandardKSIIGAuto/pics/iio66b.PNG'
-hashtags = '[#ksi #sidemen #ksivsloganpaul #ksiolajidebt #teamksi #memes #sidemenedit #ksiolajidebthd #dankmemes #ksiedit #sidemenmemes #simonminter #sidemenshow #teamdeji #babatunde #jj #ksimemes #explorepage]'
-restofCap = '\n' + '\n' + '🥊 Follow me(@ksi_memepage) for daily ksi memes!' 
-subreddit = reddit.subreddit('ksi')
-newURL = ''
-urlPosted = []
-
-post=7200 #secs
-numposts = 100
-currenpost=1
-
-while currenpost<=numposts: #num of rounds can be decided here
-    for submission in subreddit.hot(limit=25):        
-        url = submission.url        
+while currentPost<=numPosts:
+    for submission in subreddit.hot(limit=25):
+        url = submission.url
         fileName = str(submission)
-        fullPath = filePath + fileName + '.PNG'
+        fullPath = filePath + fileName + '.'    #Extension name; Example: .PNG
         title = '"' + str(submission.title) + '"'
         credit = '(Via: u/' + str(submission.author) + ' on Reddit)'
-        caption = title + '\n' + restofCap + '\n' + credit + '\n' + '\n' + '\n' + hashtags        
-        if (url.endswith("jpg") or url.endswith("png")) and (not url in urlPosted) and (fullPath != prevPath) and (fullPath != preprePath):
+        caption = title + '\n' + credit + '\n'
+        
+        if (url.endswith("jpg") or url.endswith("png")) and (not url in urlPosted): #Decide post bounds here
             try:
                 saveImage(url, filePath, fileName)
-                newURL=url                                                                                                      
                 urlPosted.append(url)
+                
                 img = Image.open(fullPath)                    
                 imgWidth, imgHeight = img.size
-                ratio = imgWidth/imgHeight                    
-                if(0.8<=ratio<=1.91):
-                    if(not bot.upload_photo(fullPath,  caption = caption)):
-                        break                    
-                    currenpost=currenpost+1 
-                    time.sleep(post)
-                    subreddit = reddit.subreddit('ksi')
+                ratio = imgWidth/imgHeight        
+
+                if(0.8<=ratio<=1.91):   #Checks if the ratio can be posted in instagam, this program does not resize
+                    if(not bot.upload_photo(fullPath,  caption = caption)):                                                                        
+                        currenpost=currenpost+1
+                        time.sleep(postGap)
+                        subreddit = credentials.subreddit('ksi')    #Refresh to get the newer posts
+                        break                        
             except:
                 print("cant be posted, next...")
                 continue
         else:
             continue
         break
+
+
+def saveImage(postUrl, filePath, fileName): #Saves image in designated path
+    fullPath = filePath + fileName + '.PNG'
+    urllib.request.urlretrieve(url, fullPath)
